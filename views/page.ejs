@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>test</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link rel="stylesheet" type="text/css" href="/easyui/themes/default/easyui.css">
+    <link rel="stylesheet" type="text/css" href="/easyui/themes/icon.css">
+    <script type="text/javascript" src="/easyui/jquery.min.js"></script>
+    <script type="text/javascript" src="/easyui/jquery.easyui.min.js"></script>
+    <style type="text/css">
+      #fm{
+        margin:0;
+        padding:10px 30px;
+      }
+      .ftitle{
+        font-size:14px;
+        font-weight:bold;
+        padding:5px 0;
+        margin-bottom:10px;
+        border-bottom:1px solid #ccc;
+      }
+      .fitem{
+        margin-bottom:5px;
+      }
+      .fitem label{
+        display:inline-block;
+        width:80px;
+      }
+      .fitem input{
+        width:160px;
+      }
+    </style>
+  </head>
+  <body>
+<h1>Nodejs + Easyui CURD 操作</h1>
+<table style="display: none"><tr><td>搜索</td><td><input type="text" id="keyword"></td><td><input type="button" value="搜索" onclick="search()"></td></tr></table>
+
+<table  id="tt" class="easyui-datagrid" style="width:600px;height:437px" toolbar="#tb" title="bbs pager"  url="/page/list"  pagination="true" fitColumns="true" showFooter="true">
+  <thead>
+  <tr>
+    <th field="ck" checkbox="true"></th>
+    <th field="id" width="80">id</th>
+    <th field="title" width="80">标题</th>
+    <th  field="content" width="80">内容</th>
+  </tr>
+  </thead>
+
+</table>
+
+<!--search tool bar-->
+<div id="tb" style="padding:2px">
+  <div style="padding: 5px;border-bottom: 1px dotted #4b72a4;">
+    <span>title:</span>
+    <input id="title" class="easyui-textbox">
+    <span>content:</span>
+    <input id="content" class="easyui-textbox">
+
+    <input type="submit" name="submit" id="submit" value="搜索" onclick="doSearch()"></input>
+  </div>
+  <div style="padding: 5px;">
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="newUser()">Add</a>
+    <a href="#" class="easyui-linkbutton" iconCls="icon-edit" plain="true" onclick="editUser()">Edit</a>
+    <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="delbbs()">Delete</a>
+    <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="more_delbbs()">More Delete</a>
+  </div>
+</div>
+
+<div id="dlg" class="easyui-dialog" style="width:400px;height:280px;padding:10px 20px"  closed="true" buttons="#dlg-buttons">
+  <form id="ff" method="post" >
+    <div class="ftitle">Nodejs CURD  by  joef.che</div>
+    <div class="fitem">
+        <label>标题</label>
+        <input type="text" name="titles" id="titles"  class="easyui-textbox" required="true"></input>
+    </div>
+    <div class="fitem">
+        <label>内容</label>
+        <textarea name="contents" id="contents"class="easyui-textbox" multiline="true" style="height:60px"></textarea>
+    </div>
+    <input type="hidden" name="id" id="id"></input>
+    
+  </form>
+</div>
+<div id="dlg-buttons">
+  <a href="javascript:void(0)" class="easyui-linkbutton c6" iconCls="icon-ok" onclick="saveUser()" style="width:90px">Save</a>
+  <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="javascript:$('#dlg').dialog('close')" style="width:90px">Cancel</a>
+</div>
+
+<script type="text/javascript">
+  var url;
+  function newUser(){
+    $('#dlg').dialog('open').dialog('center').dialog('setTitle','新增数据');
+    $('#ff').form('clear');
+    url="/page";
+  }
+  function editUser(){
+    $('#ff').form('clear');
+    var row = $('#tt').datagrid('getSelected');
+    if (row){
+      url="/page/edit";
+      $('#dlg').dialog('open').dialog('center').dialog('setTitle','修改数据');
+      $('#ff').form('load',{titles:row.title,contents:row.content,id:row.id});
+    }else{
+      $.messager.alert("提示",'请选择要修改的数据！');
+    }
+  }
+  function saveUser(){
+    $('#ff').form('submit',{
+      url:url,
+      onSubmit:function(){
+        $.messager.progress();
+        var isValid = $(this).form('validate');
+        if (!isValid){
+          $.messager.progress('close');	// hide progress bar while the form is invalid
+        }
+        return isValid;	// return false will stop the form submission
+      },
+      success:function(data){
+        //$.messager.alert('提示','操作成功!');
+        $.messager.progress('close');
+        $('#tt').datagrid('reload');
+      }
+    });
+  }
+  /*
+  $(function(){
+    $('#ff').form({
+      url:'/page',
+      onSubmit:function(){
+        $.messager.progress();
+      },
+      success:function(data){
+        $.messager.alert('提示','操作成功!');
+        $.messager.progress('close');
+        $('#tt').datagrid('reload');
+      }
+    });
+  });
+  */
+  //ajax add
+  function addbbs(){
+    var times=Math.floor(Math.random()*1000000000);
+    var title = $("#titles").val();
+    var content = $("#contents").val();
+    if(title=="")
+    {
+      alert("标题不能为空！");
+      return false;
+    }
+    $.messager.progress();
+    $.ajax({
+      async:true,
+      data:{title:title,content:content,times:times},
+      url:"/page",
+      dataType:"json",
+      type:"post",
+      success:function(data){
+        //$.messager.progress('close');
+        $('#tt').datagrid('reload');
+      },
+      error:function(data){
+        alert(data.msg);
+      }
+    });
+
+  };
+
+  //easyui ajaxfrom
+function formSubmit(){
+  var param = $("#ff").serialize();
+
+  $.post('/page',param,function(data){
+    $('#tt').datagrid('reload');
+  });
+}
+
+
+
+  //ajax del
+  function delbbs(){
+    var row = $('#tt').datagrid('getSelected');
+    if (row){
+      $.messager.confirm('警告', '删除后，不可恢复，您确定吗？', function(r){
+        if (r){
+          $.ajax({
+            async:true,
+            data:{id:row.id},
+            url:"/page/del",
+            dataType:"json",
+            type:"get",
+            success:function(data){
+              $('#tt').datagrid('reload');
+            },
+            error:function(data){
+              alert(data.msg);
+            }
+          })
+        }
+      });
+
+    }else{
+      $.messager.alert('提示','请选择要删除的数据！');
+    }
+
+  }
+  function more_delbbs(){
+    var ids = [];
+    var rows = $('#tt').datagrid('getSelections');
+
+    if(rows!=""){
+      $.messager.confirm('警告', '删除后，不可恢复，您确定吗？', function(r){
+        if (r){
+          for(var i=0; i<rows.length; i++){
+            ids.push(rows[i].id);
+          }
+          var sid=ids.join(',');
+
+          $.ajax({
+            async:true,
+            data:{id:sid},
+            url:"/page/del",
+            dataType:"json",
+            type:"get",
+            success:function(data){
+              $('#tt').datagrid('reload');
+            },
+            error:function(data){
+              alert(data.msg);
+            }
+          })
+
+        }
+      });
+
+    }else{
+      $.messager.alert('提示','请选择要删除的数据！');
+    }
+
+  }
+  //search bbs
+  function search(){
+    var times=Math.floor(Math.random()*1000000000);
+    var keyword=$("#keyword").val();
+    $.ajax({
+      async:true,
+      data:{keyword:keyword},
+      url:"/search",
+      dataType:"json",
+      type:"get",
+      success:function(data){
+        var stc="";
+        $.each( data, function(index,item){
+          stc+= "<tr><td>"+item.id+"</td><td>"+item.title+"</td><td>"+item.content+"</td><td><a href='javascript:delbbs("+item.id+")'>删除</a></td></tr>";
+        });
+        $("#bbscontent").html(stc);
+      },
+      error:function(data){
+        alert(data.msg);
+      }
+    })
+  }
+  //ajax loadlist
+  function bbslist(){
+    var times=Math.floor(Math.random()*1000000000);
+    $.ajax({
+      async:true,
+      data:{times:times},
+      url:"/list",
+      dataType:"json",
+      type:"get",
+      success:function(data){
+        showdata(data);
+      },
+      error:function(data){
+        alert(data.msg);
+      }
+    })
+  }
+
+  function showdata(data){
+    var stc="";
+    $.each( data, function(index,item){
+      stc+= "<tr><td>"+item.id+"</td><td>"+item.title+"</td><td>"+item.content+"</td><td><a href='javascript:delbbs("+item.id+")'>删除</a></td></tr>";
+    });
+    $("#bbscontent").html(stc);
+  }
+
+  function doSearch(){
+    $('#tt').datagrid('load',{
+      title: $('#title').val(),
+      content: $('#content').val()
+    });
+  }
+
+
+  </script>
+  </body>
+</html>

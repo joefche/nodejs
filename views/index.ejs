@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>test</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link rel="stylesheet" type="text/css" href="/easyui/themes/default/easyui.css">
+    <link rel="stylesheet" type="text/css" href="/easyui/themes/icon.css">
+    <script type="text/javascript" src="/easyui/jquery.min.js"></script>
+    <script type="text/javascript" src="/easyui/jquery.easyui.min.js"></script>
+  </head>
+  <body>
+<h1>Nodejs 留言板</h1>
+<table><tr><td>搜索</td><td><input type="text" id="keyword"></td><td><input type="button" value="搜索" onclick="search()"></td></tr></table>
+<table >
+  <thead>
+  <tr>
+    <td>id</td>
+    <td>标题</td>
+    <td>内容</td>
+    <td>删除</td>
+  </tr>
+  </thead>
+  <tbody id="bbscontent">
+  <% models.forEach(function( rs ){ %>
+  <tr>
+    <td><%=rs.id%></td>
+    <td><%=rs.title%></td>
+    <td><%=rs.content%></td>
+    <td><a href="javascript:delbbs(<%=rs.id%>)">删除</a></td>
+  </tr>
+  <% }); %>
+  </tbody>
+</table>
+
+<form id="ff" method="post">
+  <table class="table table-bordered table-striped">
+    <tr>
+      <td>标题</td>
+      <td><input type="text" name="title" id="title"></td>
+    </tr>
+    <tr>
+      <td>内容</td>
+      <td><textarea name="content" id="content"></textarea></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td><input type="button" name="ok" id="ok" value="提交留言" onclick="addbbs()"> </td>
+    </tr>
+  </table>
+  </form>
+<script type="text/javascript">
+  //ajax add
+  function addbbs(){
+    var times=Math.floor(Math.random()*1000000000);
+    var title = $("#title").val();
+    var content = $("#content").val();
+    if(title=="")
+    {
+      alert("标题不能为空！");
+      return false;
+    }
+    $.ajax({
+      async:true,
+      data:{title:title,content:content,times:times},
+      url:"/",
+      dataType:"json",
+      type:"post",
+      success:function(data){
+        showdata(data);
+      },
+      error:function(data){
+        alert(data.msg);
+      }
+    })
+  };
+  //ajax del
+  function delbbs(id){
+    if(id==""){
+      alert('id is null');
+      return false;
+    }
+    $.ajax({
+      async:true,
+      data:{id:id},
+      url:"/del",
+      dataType:"json",
+      type:"get",
+      success:function(data){
+        showdata(data);
+      },
+      error:function(data){
+        alert(data.msg);
+      }
+    })
+  }
+  //search bbs
+  function search(){
+    var times=Math.floor(Math.random()*1000000000);
+    var keyword=$("#keyword").val();
+    $.ajax({
+      async:true,
+      data:{keyword:keyword},
+      url:"/search",
+      dataType:"json",
+      type:"get",
+      success:function(data){
+        var stc="";
+        $.each( data, function(index,item){
+          stc+= "<tr><td>"+item.id+"</td><td>"+item.title+"</td><td>"+item.content+"</td><td><a href='javascript:delbbs("+item.id+")'>删除</a></td></tr>";
+        });
+        $("#bbscontent").html(stc);
+      },
+      error:function(data){
+        alert(data.msg);
+      }
+    })
+  }
+  //ajax loadlist
+  function bbslist(){
+    var times=Math.floor(Math.random()*1000000000);
+    $.ajax({
+      async:true,
+      data:{times:times},
+      url:"/list",
+      dataType:"json",
+      type:"get",
+      success:function(data){
+        showdata(data);
+      },
+      error:function(data){
+        alert(data.msg);
+      }
+    })
+  }
+
+  function showdata(data){
+    var stc="";
+    $.each( data, function(index,item){
+      stc+= "<tr><td>"+item.id+"</td><td>"+item.title+"</td><td>"+item.content+"</td><td><a href='javascript:delbbs("+item.id+")'>删除</a></td></tr>";
+    });
+    $("#bbscontent").html(stc);
+  }
+  </script>
+  </body>
+</html>
